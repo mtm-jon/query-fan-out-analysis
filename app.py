@@ -267,6 +267,16 @@ if fanout_file is not None and gsc_file is not None:
         
         <div id="heatmap"></div>
         
+        <div id="typeHeatmap" style="margin-top: 50px;">
+            <h2 style="text-align: center; margin-bottom: 20px; color: #f8fafc;">📊 Performance by Query Type</h2>
+            <p style="text-align: center; color: #94a3b8; margin-bottom: 30px;">How different query types rank in search results</p>
+        </div>
+        
+        <div id="formatHeatmap" style="margin-top: 50px;">
+            <h2 style="text-align: center; margin-bottom: 20px; color: #f8fafc;">📝 Performance by Content Format</h2>
+            <p style="text-align: center; color: #94a3b8; margin-bottom: 30px;">How different content formats rank in search results</p>
+        </div>
+        
         <div class="tooltip" id="tooltip"></div>
         
         <script>
@@ -282,6 +292,8 @@ if fanout_file is not None and gsc_file is not None:
                 matchedData = matchQueries(fanoutData, gscData);
                 renderStats(matchedData);
                 renderHeatmap(matchedData);
+                renderTypeHeatmap(matchedData);
+                renderFormatHeatmap(matchedData);
             }}
             
             function matchQueries(fanout, gsc) {{
@@ -529,6 +541,257 @@ Please analyze this data and provide:
                 }});
             }}
             
+            function renderTypeHeatmap(data) {{
+                const types = [...new Set(data.map(d => d.type))].sort();
+                
+                const margin = {{top: 80, right: 50, bottom: 100, left: 500}};
+                const cellWidth = 150;
+                const cellHeight = 35;
+                const width = types.length * cellWidth + margin.left + margin.right;
+                const height = data.length * cellHeight + margin.top + margin.bottom;
+
+                const svg = d3.select('#typeHeatmap')
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height);
+
+                const g = svg.append('g')
+                    .attr('transform', `translate(${{margin.left}},${{margin.top}})`);
+
+                const tooltip = d3.select('#tooltip');
+
+                // Column headers (types)
+                types.forEach((type, i) => {{
+                    g.append('text')
+                        .attr('class', 'axis-label')
+                        .attr('x', i * cellWidth + cellWidth / 2)
+                        .attr('y', -20)
+                        .attr('text-anchor', 'middle')
+                        .style('font-size', '13px')
+                        .text(type);
+                }});
+
+                // Draw cells
+                data.forEach((query, rowIdx) => {{
+                    const row = g.append('g')
+                        .attr('transform', `translate(0,${{rowIdx * cellHeight}})`);
+
+                    // Query label
+                    row.append('text')
+                        .attr('class', 'query-label')
+                        .attr('x', -10)
+                        .attr('y', cellHeight / 2 + 5)
+                        .attr('text-anchor', 'end')
+                        .style('font-size', '12px')
+                        .text(query.fanout_query.length > 60 ? query.fanout_query.substring(0, 57) + '...' : query.fanout_query);
+
+                    // Draw cell for each type
+                    types.forEach((type, colIdx) => {{
+                        const isActiveType = query.type === type;
+                        
+                        const cell = row.append('rect')
+                            .attr('class', 'cell')
+                            .attr('x', colIdx * cellWidth)
+                            .attr('y', 0)
+                            .attr('width', cellWidth - 2)
+                            .attr('height', cellHeight - 2)
+                            .attr('rx', 4)
+                            .style('fill', isActiveType ? getPositionColor(query.position) : '#1f2937')
+                            .style('opacity', isActiveType ? 0.9 : 0.2);
+
+                        if (isActiveType) {{
+                            if (query.is_gap) {{
+                                row.append('text')
+                                    .attr('class', 'position-text')
+                                    .attr('x', colIdx * cellWidth + cellWidth / 2)
+                                    .attr('y', cellHeight / 2 + 5)
+                                    .style('font-size', '11px')
+                                    .text('GAP');
+                            }} else {{
+                                row.append('text')
+                                    .attr('class', 'position-text')
+                                    .attr('x', colIdx * cellWidth + cellWidth / 2)
+                                    .attr('y', cellHeight / 2 + 5)
+                                    .style('font-size', '11px')
+                                    .text(`Pos: ${{query.position.toFixed(1)}}`);
+                            }}
+
+                            cell.on('mouseover', function(event) {{
+                                tooltip.style('opacity', 1);
+                                
+                                let tooltipContent = `
+                                    <div class="tooltip-query">${{query.fanout_query}}</div>
+                                    <div class="tooltip-row">
+                                        <span class="tooltip-label">Type:</span>
+                                        <span>${{query.type}}</span>
+                                    </div>
+                                `;
+                                
+                                if (query.is_gap) {{
+                                    tooltipContent += `
+                                        <div class="tooltip-row">
+                                            <span class="tooltip-label">Status:</span>
+                                            <span style="color: #ef4444; font-weight: bold;">CONTENT GAP</span>
+                                        </div>
+                                    `;
+                                }} else {{
+                                    tooltipContent += `
+                                        <div class="tooltip-row">
+                                            <span class="tooltip-label">Position:</span>
+                                            <span>${{query.position.toFixed(1)}}</span>
+                                        </div>
+                                        <div class="tooltip-row">
+                                            <span class="tooltip-label">Clicks:</span>
+                                            <span>${{query.clicks.toLocaleString()}}</span>
+                                        </div>
+                                        <div class="tooltip-row">
+                                            <span class="tooltip-label">Impressions:</span>
+                                            <span>${{query.impressions.toLocaleString()}}</span>
+                                        </div>
+                                    `;
+                                }}
+                                
+                                tooltip.html(tooltipContent);
+                            }})
+                            .on('mousemove', function(event) {{
+                                tooltip
+                                    .style('left', (event.pageX + 15) + 'px')
+                                    .style('top', (event.pageY - 15) + 'px');
+                            }})
+                            .on('mouseout', function() {{
+                                tooltip.style('opacity', 0);
+                            }});
+                        }}
+                    }});
+                }});
+            }}
+
+            function renderFormatHeatmap(data) {{
+                const formats = [...new Set(data.map(d => d.routing_format))].sort();
+                
+                const margin = {{top: 80, right: 50, bottom: 120, left: 500}};
+                const cellWidth = 150;
+                const cellHeight = 35;
+                const width = formats.length * cellWidth + margin.left + margin.right;
+                const height = data.length * cellHeight + margin.top + margin.bottom;
+
+                const svg = d3.select('#formatHeatmap')
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height);
+
+                const g = svg.append('g')
+                    .attr('transform', `translate(${{margin.left}},${{margin.top}})`);
+
+                const tooltip = d3.select('#tooltip');
+
+                // Column headers (formats) - rotated for readability
+                formats.forEach((format, i) => {{
+                    g.append('text')
+                        .attr('class', 'axis-label')
+                        .attr('x', i * cellWidth + cellWidth / 2)
+                        .attr('y', -10)
+                        .attr('text-anchor', 'end')
+                        .attr('transform', `rotate(-45, ${{i * cellWidth + cellWidth / 2}}, -10)`)
+                        .style('font-size', '12px')
+                        .text(format);
+                }});
+
+                // Draw cells
+                data.forEach((query, rowIdx) => {{
+                    const row = g.append('g')
+                        .attr('transform', `translate(0,${{rowIdx * cellHeight}})`);
+
+                    // Query label
+                    row.append('text')
+                        .attr('class', 'query-label')
+                        .attr('x', -10)
+                        .attr('y', cellHeight / 2 + 5)
+                        .attr('text-anchor', 'end')
+                        .style('font-size', '12px')
+                        .text(query.fanout_query.length > 60 ? query.fanout_query.substring(0, 57) + '...' : query.fanout_query);
+
+                    // Draw cell for each format
+                    formats.forEach((format, colIdx) => {{
+                        const isActiveFormat = query.routing_format === format;
+                        
+                        const cell = row.append('rect')
+                            .attr('class', 'cell')
+                            .attr('x', colIdx * cellWidth)
+                            .attr('y', 0)
+                            .attr('width', cellWidth - 2)
+                            .attr('height', cellHeight - 2)
+                            .attr('rx', 4)
+                            .style('fill', isActiveFormat ? getPositionColor(query.position) : '#1f2937')
+                            .style('opacity', isActiveFormat ? 0.9 : 0.2);
+
+                        if (isActiveFormat) {{
+                            if (query.is_gap) {{
+                                row.append('text')
+                                    .attr('class', 'position-text')
+                                    .attr('x', colIdx * cellWidth + cellWidth / 2)
+                                    .attr('y', cellHeight / 2 + 5)
+                                    .style('font-size', '11px')
+                                    .text('GAP');
+                            }} else {{
+                                row.append('text')
+                                    .attr('class', 'position-text')
+                                    .attr('x', colIdx * cellWidth + cellWidth / 2)
+                                    .attr('y', cellHeight / 2 + 5)
+                                    .style('font-size', '11px')
+                                    .text(`Pos: ${{query.position.toFixed(1)}}`);
+                            }}
+
+                            cell.on('mouseover', function(event) {{
+                                tooltip.style('opacity', 1);
+                                
+                                let tooltipContent = `
+                                    <div class="tooltip-query">${{query.fanout_query}}</div>
+                                    <div class="tooltip-row">
+                                        <span class="tooltip-label">Format:</span>
+                                        <span>${{query.routing_format}}</span>
+                                    </div>
+                                `;
+                                
+                                if (query.is_gap) {{
+                                    tooltipContent += `
+                                        <div class="tooltip-row">
+                                            <span class="tooltip-label">Status:</span>
+                                            <span style="color: #ef4444; font-weight: bold;">CONTENT GAP</span>
+                                        </div>
+                                    `;
+                                }} else {{
+                                    tooltipContent += `
+                                        <div class="tooltip-row">
+                                            <span class="tooltip-label">Position:</span>
+                                            <span>${{query.position.toFixed(1)}}</span>
+                                        </div>
+                                        <div class="tooltip-row">
+                                            <span class="tooltip-label">Clicks:</span>
+                                            <span>${{query.clicks.toLocaleString()}}</span>
+                                        </div>
+                                        <div class="tooltip-row">
+                                            <span class="tooltip-label">Impressions:</span>
+                                            <span>${{query.impressions.toLocaleString()}}</span>
+                                        </div>
+                                    `;
+                                }}
+                                
+                                tooltip.html(tooltipContent);
+                            }})
+                            .on('mousemove', function(event) {{
+                                tooltip
+                                    .style('left', (event.pageX + 15) + 'px')
+                                    .style('top', (event.pageY - 15) + 'px');
+                            }})
+                            .on('mouseout', function() {{
+                                tooltip.style('opacity', 0);
+                            }});
+                        }}
+                    }});
+                }});
+            }}
+            
             function openAI(platform) {{
                 const urls = {{
                     'chatgpt': 'https://chat.openai.com/',
@@ -548,7 +811,7 @@ Please analyze this data and provide:
     """
     
     # Render the component
-    components.html(html_code, height=2000, scrolling=True)
+    components.html(html_code, height=4000, scrolling=True)
     
     # Attribution
     st.markdown("---")
@@ -594,7 +857,10 @@ Please analyze this data and provide:
         In Google Search Console, search for your head term and export the "Queries" file.
         
         **4️⃣ Review Results**  
-        Check the stats, AI insights, and three heatmaps above.
+        Check the stats, AI insights, and three heatmaps above:
+        - Main position heatmap
+        - Performance by query type  
+        - Performance by content format
         
         **6️⃣ Export & Act**  
         Use the insights to prioritize your content calendar.
@@ -676,7 +942,10 @@ else:
         st.markdown("""
         #### 4️⃣ Review Results
         Check the stats dashboard, AI insights, and three heatmaps to 
-        understand your query performance and content gaps.
+        understand your query performance and content gaps:
+        - **Main Heatmap**: All queries with positions
+        - **Type Heatmap**: Performance by query type
+        - **Format Heatmap**: Performance by content format
         """)
         
         st.markdown("""
@@ -694,9 +963,9 @@ else:
     with col1:
         st.markdown("""
         **📊 Three Heatmap Views**
-        - Main position heatmap
-        - Performance by query type
-        - Performance by content format
+        1. Main position heatmap (all queries)
+        2. Performance by query type
+        3. Performance by content format
         """)
     
     with col2:
