@@ -231,10 +231,29 @@ if fanout_file is not None and gsc_file is not None:
                 padding: 15px;
                 color: #cbd5e1;
                 font-size: 13px;
-                max-height: 200px;
+                max-height: 300px;
                 overflow-y: auto;
                 margin-bottom: 15px;
                 font-family: monospace;
+                white-space: pre-wrap;
+                line-height: 1.6;
+            }}
+            
+            .copy-btn {{
+                background: #334155;
+                color: #f8fafc;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 600;
+                transition: all 0.2s;
+                margin-bottom: 15px;
+            }}
+            
+            .copy-btn:hover {{
+                background: #475569;
             }}
         </style>
     </head>
@@ -256,6 +275,7 @@ if fanout_file is not None and gsc_file is not None:
         <div class="ai-section">
             <h3>🤖 AI-Powered Insights</h3>
             <div class="prompt-box" id="aiPrompt">Analyzing your data...</div>
+            <button class="copy-btn" onclick="copyPrompt()">📋 Copy Prompt</button>
             <div class="ai-buttons">
                 <button class="ai-btn chatgpt-btn" onclick="openAI('chatgpt')">ChatGPT</button>
                 <button class="ai-btn claude-btn" onclick="openAI('claude')">Claude</button>
@@ -417,25 +437,82 @@ if fanout_file is not None and gsc_file is not None:
             }}
             
             function generateAIPrompt(data, ranking, gaps, top3, top10, totalClicks) {{
-                const topPerformers = ranking.sort((a, b) => a.position - b.position).slice(0, 3);
+                // Analyze by type
+                const typeAnalysis = {{}};
+                data.forEach(d => {{
+                    if (!typeAnalysis[d.type]) {{
+                        typeAnalysis[d.type] = {{ total: 0, ranking: 0, gaps: 0, avgPosition: [] }};
+                    }}
+                    typeAnalysis[d.type].total++;
+                    if (d.is_gap) {{
+                        typeAnalysis[d.type].gaps++;
+                    }} else {{
+                        typeAnalysis[d.type].ranking++;
+                        typeAnalysis[d.type].avgPosition.push(d.position);
+                    }}
+                }});
                 
-                let prompt = `I'm analyzing my query fan-out strategy. Here are the results:
+                // Analyze by format
+                const formatAnalysis = {{}};
+                data.forEach(d => {{
+                    if (!formatAnalysis[d.routing_format]) {{
+                        formatAnalysis[d.routing_format] = {{ total: 0, ranking: 0, gaps: 0, avgPosition: [] }};
+                    }}
+                    formatAnalysis[d.routing_format].total++;
+                    if (d.is_gap) {{
+                        formatAnalysis[d.routing_format].gaps++;
+                    }} else {{
+                        formatAnalysis[d.routing_format].ranking++;
+                        formatAnalysis[d.routing_format].avgPosition.push(d.position);
+                    }}
+                }});
+                
+                // Get top and bottom performers
+                const topPerformers = ranking.sort((a, b) => a.position - b.position).slice(0, 3);
+                const bottomPerformers = ranking.sort((a, b) => b.position - a.position).slice(0, 3);
+                
+                // Build the prompt
+                let prompt = `I'm analyzing my website's query fan-out strategy and need help interpreting the results and creating an action plan.
 
-OVERALL: ${{data.length}} queries analyzed, ${{ranking.length}} ranking, ${{gaps.length}} gaps
-TOP 3 POSITIONS: ${{top3}} queries
-TOP 10 POSITIONS: ${{top10}} queries
-TOTAL CLICKS: ${{totalClicks.toLocaleString()}}
+## OVERALL PERFORMANCE
+- Total Queries Analyzed: ${{data.length}}
+- Queries Ranking: ${{ranking.length}} (${{(ranking.length/data.length*100).toFixed(1)}}%)
+- Content Gaps: ${{gaps.length}} (${{(gaps.length/data.length*100).toFixed(1)}}%)
+- Queries in Top 3: ${{top3}}
+- Queries in Top 10: ${{top10}}
+- Total Clicks: ${{totalClicks.toLocaleString()}}
 
-TOP PERFORMERS:
-${{topPerformers.map((q, i) => `${{i+1}}. "${{q.fanout_query}}" - Pos ${{q.position.toFixed(1)}} (${{q.clicks}} clicks)`).join('\\n')}}
+## TOP PERFORMING QUERIES
+${{topPerformers.map((q, i) => `${{i+1}}. "${{q.fanout_query}}" - Position ${{q.position.toFixed(1)}} (${{q.clicks}} clicks) [${{q.type}}]`).join('\\n')}}
 
-CONTENT GAPS: ${{gaps.length}} queries not ranking
+## POOREST PERFORMING QUERIES
+${{bottomPerformers.map((q, i) => `${{i+1}}. "${{q.fanout_query}}" - Position ${{q.position.toFixed(1)}} (${{q.clicks}} clicks) [${{q.type}}]`).join('\\n')}}
 
-Please analyze this data and provide:
-1. Key patterns in performance
-2. Priority content gaps to address
-3. Strategic recommendations
-4. 30-day action plan`;
+## PERFORMANCE BY QUERY TYPE
+${{Object.entries(typeAnalysis).map(([type, stats]) => {{
+    const avg = stats.avgPosition.length > 0 ? (stats.avgPosition.reduce((a, b) => a + b, 0) / stats.avgPosition.length).toFixed(1) : 'N/A';
+    return `- ${{type}}: ${{stats.ranking}}/${{stats.total}} ranking (${{stats.gaps}} gaps), Avg Position: ${{avg}}`;
+}}).join('\\n')}}
+
+## PERFORMANCE BY CONTENT FORMAT
+${{Object.entries(formatAnalysis).map(([format, stats]) => {{
+    const avg = stats.avgPosition.length > 0 ? (stats.avgPosition.reduce((a, b) => a + b, 0) / stats.avgPosition.length).toFixed(1) : 'N/A';
+    return `- ${{format}}: ${{stats.ranking}}/${{stats.total}} ranking (${{stats.gaps}} gaps), Avg Position: ${{avg}}`;
+}}).join('\\n')}}
+
+## CONTENT GAPS (Queries Not Ranking)
+${{gaps.slice(0, 10).map((g, i) => `${{i+1}}. "${{g.fanout_query}}" [${{g.type}}] - Recommended format: ${{g.routing_format}}`).join('\\n')}}
+${{gaps.length > 10 ? `\\n... and ${{gaps.length - 10}} more content gaps` : ''}}
+
+## QUESTIONS FOR YOU TO ANALYZE:
+1. What are the key patterns you see in my query performance? Which types or formats are performing best/worst?
+2. What are the most critical content gaps I should prioritize based on potential traffic and strategic importance?
+3. Are there any query types or content formats that are consistently underperforming that might need a different approach?
+4. Based on the top performers, what's working well that I should replicate?
+5. Can you create a prioritized 30-day action plan for addressing the content gaps and improving poor performers?
+6. Are there any unexpected insights or patterns in the data I should be aware of?
+
+Please provide a detailed analysis with specific, actionable recommendations.`;
 
                 document.getElementById('aiPrompt').textContent = prompt;
                 generatedPrompt = prompt;
@@ -804,6 +881,21 @@ Please analyze this data and provide:
                 window.open(urls[platform], '_blank');
                 navigator.clipboard.writeText(generatedPrompt);
                 alert('✅ Prompt copied! Paste it into ' + platform.charAt(0).toUpperCase() + platform.slice(1));
+            }}
+            
+            function copyPrompt() {{
+                navigator.clipboard.writeText(generatedPrompt).then(() => {{
+                    const btn = document.querySelector('.copy-btn');
+                    const originalText = btn.textContent;
+                    btn.textContent = '✅ Copied!';
+                    btn.style.background = '#10b981';
+                    setTimeout(() => {{
+                        btn.textContent = originalText;
+                        btn.style.background = '#334155';
+                    }}, 2000);
+                }}).catch(err => {{
+                    alert('Failed to copy. Please try again.');
+                }});
             }}
         </script>
     </body>
