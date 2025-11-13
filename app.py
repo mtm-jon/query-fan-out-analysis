@@ -553,47 +553,209 @@ Please analyze this data and provide:
     # Attribution
     st.markdown("---")
     st.markdown("""
-    <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #1e3a8a, #1e40af); border-radius: 10px; margin-top: 30px;">
-        <p style="color: #e0e7ff; font-size: 16px; margin: 0;">
-            <strong style="color: white;">Created by Jon Clark</strong>, Managing Partner at 
-            <a href="https://www.movingtrafficmedia.com" target="_blank" style="color: #93c5fd; text-decoration: none;">Moving Traffic Media</a>, 
+    <div style="text-align: center; padding: 25px; background: linear-gradient(135deg, #1e3a8a, #1e40af); border-radius: 12px; margin: 30px 0;">
+        <p style="color: #e0e7ff; font-size: 17px; margin: 0; line-height: 1.8;">
+            <strong style="color: white; font-size: 20px;">Created by Jon Clark</strong><br>
+            Managing Partner at 
+            <a href="https://www.movingtrafficmedia.com" target="_blank" style="color: #93c5fd; text-decoration: none; font-weight: 600; font-size: 17px;">Moving Traffic Media</a>, 
             an AI-driven search agency.
-            <br>
-            <a href="https://www.linkedin.com/in/ppcmarketing" target="_blank" style="color: #93c5fd; text-decoration: none;">Follow on LinkedIn</a>
+            <br><br>
+            <a href="https://www.linkedin.com/in/ppcmarketing" target="_blank" 
+               style="display: inline-block; background: #0077b5; color: white; padding: 12px 24px; 
+               border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 5px; font-size: 15px;">
+               🔗 Follow on LinkedIn
+            </a>
         </p>
     </div>
     """, unsafe_allow_html=True)
-
-else:
-    # Instructions when no files uploaded
-    st.info("👆 Please upload both CSV files to get started!")
     
-    st.markdown("### 📖 How to Get Your Files")
+    # Instructions section after results
+    st.markdown("---")
+    st.markdown("### 📖 How to Use This Tool")
     
     col1, col2 = st.columns(2)
     
     with col1:
         st.markdown("""
-        **1. Export from Qforia**
-        
+        **1️⃣ Export from Qforia**  
         Go to [Qforia: Query Fan-Out Simulator](https://ipullrank.com/tools/qforia) 
         and export your query fan-out results.
+        
+        **3️⃣ Upload Your Files**  
+        Use the upload boxes at the top to upload both CSV files.
+        
+        **5️⃣ Get AI Analysis**  
+        Click any AI assistant button to get strategic recommendations.
         """)
     
     with col2:
         st.markdown("""
-        **2. Export from Google Search Console**
+        **2️⃣ Export from Google Search Console**  
+        In Google Search Console, search for your head term and export the "Queries" file.
         
+        **4️⃣ Review Results**  
+        Check the stats, AI insights, and three heatmaps above.
+        
+        **6️⃣ Export & Act**  
+        Use the insights to prioritize your content calendar.
+        """)
+    
+    # Color guide
+    st.markdown("### 🎨 Color Guide")
+    
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    with col1:
+        st.markdown('<div style="background: #10b981; padding: 10px; border-radius: 5px; text-align: center; color: white; font-weight: bold;">Positions 1-10<br>Excellent</div>', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown('<div style="background: #facc15; padding: 10px; border-radius: 5px; text-align: center; color: #1a1a1a; font-weight: bold;">Positions 11-20<br>Good</div>', unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown('<div style="background: #f97316; padding: 10px; border-radius: 5px; text-align: center; color: white; font-weight: bold;">Positions 21-50<br>Needs Work</div>', unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown('<div style="background: #dc2626; padding: 10px; border-radius: 5px; text-align: center; color: white; font-weight: bold;">Positions 51+<br>Poor</div>', unsafe_allow_html=True)
+    
+    with col5:
+        st.markdown('<div style="background: #374151; padding: 10px; border-radius: 5px; text-align: center; color: white; font-weight: bold;">Not Ranking<br>Content Gap</div>', unsafe_allow_html=True)
+
+else:
+    # Instructions when no files uploaded
+    st.info("👆 Please upload both CSV files to get started!")
+    
+    # Attribution Section
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #1e3a8a, #1e40af); border-radius: 10px; margin: 20px 0;">
+        <p style="color: #e0e7ff; font-size: 16px; margin: 0;">
+            <strong style="color: white; font-size: 18px;">Created by Jon Clark</strong><br>
+            Managing Partner at 
+            <a href="https://www.movingtrafficmedia.com" target="_blank" style="color: #93c5fd; text-decoration: none; font-weight: 600;">Moving Traffic Media</a>, 
+            an AI-driven search agency.
+            <br><br>
+            <a href="https://www.linkedin.com/in/ppcmarketing" target="_blank" 
+               style="display: inline-block; background: #0077b5; color: white; padding: 10px 20px; 
+               border-radius: 6px; text-decoration: none; font-weight: 600; margin-top: 10px;">
+               🔗 Follow on LinkedIn
+            </a>
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("### 📖 How to Use This Tool")
+    
+    # Create instruction cards
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        #### 1️⃣ Export from Qforia
+        Go to [**Qforia: Query Fan-Out Simulator**](https://ipullrank.com/tools/qforia) 
+        and export your query fan-out results.
+        """)
+        
+        st.markdown("""
+        #### 3️⃣ Upload Your Files
+        Use the upload boxes at the top to upload both CSV files.
+        """)
+        
+        st.markdown("""
+        #### 5️⃣ Get AI Analysis
+        Click any AI assistant button (ChatGPT, Claude, Gemini, Perplexity, or Grok) 
+        to get strategic recommendations and an action plan.
+        """)
+    
+    with col2:
+        st.markdown("""
+        #### 2️⃣ Export from Google Search Console
         In Google Search Console, search for your head term and 
-        export the "Queries" file from the results.
+        export the **"Queries"** file from the results.
+        """)
+        
+        st.markdown("""
+        #### 4️⃣ Review Results
+        Check the stats dashboard, AI insights, and three heatmaps to 
+        understand your query performance and content gaps.
+        """)
+        
+        st.markdown("""
+        #### 6️⃣ Export & Act
+        Export your content gaps CSV and use the AI insights to 
+        prioritize your content calendar.
         """)
     
     st.markdown("---")
-    st.markdown("""
-    ### 🎨 What You'll Get
     
-    - **Stats Dashboard**: Ranking queries, content gaps, top positions
-    - **AI-Powered Insights**: Analysis from ChatGPT, Claude, Gemini, Perplexity, or Grok
-    - **Interactive Heatmap**: Color-coded position rankings from 1-100+
-    - **Export Feature**: Download content gaps for your content calendar
-    """)
+    st.markdown("### 🎨 What You'll Get")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("""
+        **📊 Three Heatmap Views**
+        - Main position heatmap
+        - Performance by query type
+        - Performance by content format
+        """)
+    
+    with col2:
+        st.markdown("""
+        **🤖 Five AI Assistants**
+        - ChatGPT
+        - Claude
+        - Gemini
+        - Perplexity
+        - Grok
+        """)
+    
+    with col3:
+        st.markdown("""
+        **📈 Key Insights**
+        - Ranking queries
+        - Content gaps
+        - Top positions
+        - Total clicks
+        """)
+    
+    st.markdown("---")
+    
+    # Color Guide
+    st.markdown("### 🎨 Color Guide")
+    
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    with col1:
+        st.markdown("""
+        <div style="background: #10b981; padding: 10px; border-radius: 5px; text-align: center; color: white; font-weight: bold;">
+        Positions 1-10<br>Excellent
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div style="background: #facc15; padding: 10px; border-radius: 5px; text-align: center; color: #1a1a1a; font-weight: bold;">
+        Positions 11-20<br>Good
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown("""
+        <div style="background: #f97316; padding: 10px; border-radius: 5px; text-align: center; color: white; font-weight: bold;">
+        Positions 21-50<br>Needs Work
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown("""
+        <div style="background: #dc2626; padding: 10px; border-radius: 5px; text-align: center; color: white; font-weight: bold;">
+        Positions 51+<br>Poor
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col5:
+        st.markdown("""
+        <div style="background: #374151; padding: 10px; border-radius: 5px; text-align: center; color: white; font-weight: bold;">
+        Not Ranking<br>Content Gap
+        </div>
+        """, unsafe_allow_html=True)
